@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: otc
+      POSTGRES_PASSWORD: otc
+      POSTGRES_DB: otc_ctrm
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U otc -d otc_ctrm"]
+      interval: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      retries: 20
+
+  api:
+    build: ./backend
+    environment: &backend_env
+      DATABASE_URL: postgresql+asyncpg://otc:otc@db:5432/otc_ctrm
+      REDIS_URL: redis://redis:6379/0
+      CONFIRMATIONS_DIR: /srv/confirmations
+      HOUSE_LEGAL_NAME: OTC Flow B.V.
+      HOUSE_LEI: 724500RQTZBT2SGDMC91
+    ports: ["8000:8000"]
+    volumes: ["confirmations:/srv/confirmations"]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  worker:
+    build: ./backend
+    command: celery -A app.tasks worker --loglevel=info -c 4
+    environment: *backend_env
+    volumes: ["confirmations:/srv/confirmations"]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+volumes:
+  pgdata:
+  confirmations:
