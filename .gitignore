@@ -1,0 +1,35 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local PostgreSQL cluster created by dev.ps1
+.pgdata/
+
+# Generated artefacts — EFET confirmations are reproducible from the trade record
+confirmations/
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# Environment and secrets — never commit a DSN with credentials
+.env
+.env.*
+!.env.example
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Session tooling
+.remember/
+.claude/
